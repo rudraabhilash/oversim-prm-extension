@@ -21,7 +21,7 @@
  */
 
 #include <omnetpp.h>
-#include <malloc.h>
+#include <malloc/malloc.h>
 #include <vector>
 #include <map>
 

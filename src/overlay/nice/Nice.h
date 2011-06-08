@@ -88,6 +88,9 @@ public:
 
 protected:
 
+    /* Map for all peer infos */
+    std::map<TransportAddress, NicePeerInfo*> peerInfos;
+
     /* Cluster Information */
     NiceCluster clusters[maxLayers];
 
@@ -98,20 +101,17 @@ protected:
      */
     virtual void changeState(int toState);
 
-    /* Find highest layer in which node resides. Returns -1 when node not yet joined. */
-    int getHighestLayer();
-
     /* see BaseOverlay.h */
     virtual void joinOverlay();
 
     virtual void handleNodeLeaveNotification();
 
-    virtual void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
-
     void sendDataToOverlay(NiceMulticastMessage *appMsg);
 
-    /* Map for all peer infos */
-    std::map<TransportAddress, NicePeerInfo*> peerInfos;
+    void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
+
+    /* Find highest layer in which node resides. Returns -1 when node not yet joined. */
+    int getHighestLayer();
 
 private:
 
@@ -253,8 +253,6 @@ private:
     void handleNiceJoinevalResponse(NiceMessage* msg);
 
     void handleNiceLeaderHeartbeatOrTransfer(NiceMessage* msg);
-
-    //void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
 
     void handleNicePeerTemporary(NiceMessage* msg);
 

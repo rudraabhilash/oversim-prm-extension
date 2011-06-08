@@ -88,6 +88,9 @@ public:
 
 protected:
 
+    /* Cluster Information */
+    NiceCluster clusters[maxLayers];
+
     /**
      * changes node state
      *
@@ -95,11 +98,20 @@ protected:
      */
     virtual void changeState(int toState);
 
+    /* Find highest layer in which node resides. Returns -1 when node not yet joined. */
+    int getHighestLayer();
+
     /* see BaseOverlay.h */
     virtual void joinOverlay();
 
     virtual void handleNodeLeaveNotification();
 
+    virtual void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
+
+    void sendDataToOverlay(NiceMulticastMessage *appMsg);
+
+    /* Map for all peer infos */
+    std::map<TransportAddress, NicePeerInfo*> peerInfos;
 
 private:
 
@@ -154,9 +166,6 @@ private:
     /* Cluster parameter k */
     unsigned short k;
 
-    /* Cluster Information */
-    NiceCluster clusters[maxLayers];
-
     /* Holds the current layer we query, if we do */
     int evalLayer;
     int joinLayer;
@@ -175,9 +184,6 @@ private:
 
     /* Layer intended to join */
     short targetLayer;
-
-    /* Map for all peer infos */
-    std::map<TransportAddress, NicePeerInfo*> peerInfos;
 
     /* set holding temporary peered joiner nodes */
     std::map<TransportAddress, simtime_t> tempPeers;
@@ -220,9 +226,6 @@ private:
     /* Find highest layer in which node is leader */
     int getHighestLeaderLayer();
 
-    /* Find highest layer in which node resides. Returns -1 when node not yet joined. */
-    int getHighestLayer();
-
     /* Joining the hierarchy from scratch */
     void BasicJoinLayer(short layer);
 
@@ -251,7 +254,7 @@ private:
 
     void handleNiceLeaderHeartbeatOrTransfer(NiceMessage* msg);
 
-    void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
+    //void handleNiceMulticast(NiceMulticastMessage* multicastMsg);
 
     void handleNicePeerTemporary(NiceMessage* msg);
 
@@ -343,8 +346,6 @@ private:
     std::pair<TransportAddress, simtime_t> findCenter(const NiceCluster& cluster, bool allowRandom = false);
     template <class ConstIter>
     std::pair<TransportAddress, simtime_t> findCenter(ConstIter begin, ConstIter end, bool allowRandom = false);
-
-    void sendDataToOverlay(NiceMulticastMessage *appMsg);
 
     void pollRP(int layer);
 

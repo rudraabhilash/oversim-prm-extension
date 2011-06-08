@@ -3488,6 +3488,10 @@ void Nice::pollRP(int layer)
 
 } // pollRP
 
+NiceCluster& Nice::getCluster(int layer) {
+	return clusters[layer];
+}
+
 
 
 }; //namespace

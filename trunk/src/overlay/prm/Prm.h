@@ -16,7 +16,7 @@ namespace oversim {
 
 class MulticastMessageQueue : public std::list<PrmMulticastMessage*> {
 	/* Size of the packet buffer.*/
-	const static int BUFFER_SIZE = 5;
+	const static int BUFFER_SIZE = 10;
 public:
 	MulticastMessageQueue();
 	void push(PrmMulticastMessage* x);
@@ -27,7 +27,8 @@ class Prm: public Nice {
 //	const static string SIM_RESULTS_FILENAME = "prm-results";
 	const static int NUM_CHILDS = 3;
 	const static int TTL = 3;
-	const static int DISCOVERY_INTERVAL = 10;
+	const static int DISCOVERY_INTERVAL = 80;
+	const static double BETA = 0.01;
 private:
 	/* Buffer to keep the last BUFFER_SIZE packets received. */
 	MulticastMessageQueue pkt_buffer_;
@@ -57,10 +58,10 @@ protected:
 	void handlePrmRandomWalk(PrmRandomWalkMessage* msg);
 	void handlePrmRandomWalkResponse(PrmRandomWalkMessage* msg);
 	void sendPrmNakMulticast(PrmMulticastMessage* msg);
-	virtual void changeState(int toState);
 	void startPrmRandomWalkDiscover();
 	void sendPrmRandomWalk(PrmRandomWalkMessage* msg);
 	void sendDataToChilds(PrmMulticastMessage* msg);
+	virtual void changeState(int toState);
 public:
 	Prm();
 	virtual ~Prm();

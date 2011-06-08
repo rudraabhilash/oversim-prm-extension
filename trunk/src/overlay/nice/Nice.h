@@ -92,7 +92,7 @@ protected:
     std::map<TransportAddress, NicePeerInfo*> peerInfos;
 
     /* Cluster Information */
-    NiceCluster clusters[maxLayers];
+    //NiceCluster clusters[maxLayers];
 
     /**
      * changes node state
@@ -112,6 +112,8 @@ protected:
 
     /* Find highest layer in which node resides. Returns -1 when node not yet joined. */
     int getHighestLayer();
+
+    NiceCluster& getCluster(int layer);
 
 private:
 
@@ -166,6 +168,9 @@ private:
     /* Cluster parameter k */
     unsigned short k;
 
+    /* Cluster Information */
+    NiceCluster clusters[maxLayers];
+
     /* Holds the current layer we query, if we do */
     int evalLayer;
     int joinLayer;
@@ -184,6 +189,9 @@ private:
 
     /* Layer intended to join */
     short targetLayer;
+
+    /* Map for all peer infos */
+//    std::map<TransportAddress, NicePeerInfo*> peerInfos;
 
     /* set holding temporary peered joiner nodes */
     std::map<TransportAddress, simtime_t> tempPeers;

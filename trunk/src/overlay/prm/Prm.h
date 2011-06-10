@@ -2,7 +2,7 @@
  * Prm.h
  *
  *  Created on: Jun 5, 2011
- *      Author: tproenca
+ *      Authors: Tiago Proença, Roberto Fonseca, Nilmax Moura
  */
 
 #ifndef PRM_H_

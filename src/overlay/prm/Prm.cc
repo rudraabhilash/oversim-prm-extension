@@ -2,7 +2,7 @@
  * Prm.cc
  *
  *  Created on: Jun 5, 2011
- *      Author: tproenca
+ *      Authors: Tiago Proença, Roberto Fonseca, and Nilmax Moura
  */
 
 #include <omnetpp.h>
@@ -32,7 +32,6 @@ Prm::Prm() :
 	randomWalk_forwards_(0),randomWalk_initiated_(0), mesh_sent_pkts_(0) {
 	// Initializing seed of the random number generator.
 	srand(time(0));
-//	srand(1000);
 }
 
 Prm::~Prm() {
@@ -101,11 +100,7 @@ void Prm::handlePrmMulticast(PrmMulticastMessage* multicastMsg) {
 	// because it deletes the multicast message instance.
 	handleNiceMulticast(multicastMsg);
 
-	// Start random walk discovery for each DISCOVERY_INTERVAL packets.
-//	if ((received_pkts_ % DISCOVERY_INTERVAL) == DISCOVERY_INTERVAL-1) {
-//		startPrmRandomWalkDiscover();
-//	}
-
+	// Start random walk discovery for each node with a probability of 001 packets.
 	if ((rand() % (int)(1/0.001)) == 1){
 		startPrmRandomWalkDiscover();
 	}
@@ -113,6 +108,9 @@ void Prm::handlePrmMulticast(PrmMulticastMessage* multicastMsg) {
 }
 
 void Prm::sendDataToChilds(PrmMulticastMessage* msg){
+
+
+
 	if (msg->getSrcNode() != thisNode) {
 		std::list<TransportAddress>::iterator it;
 		for(it = childs_.begin(); it != childs_.end(); it++) {
@@ -180,7 +178,6 @@ void Prm::sendPrmNakMulticast(PrmMulticastMessage* msg) {
 		}
 
 		if (match_pkts.size() > 0) {
-//			std::cout << "pai tem pacotes" << endl;
 			PrmMulticastMessage *prmMsg = new PrmMulticastMessage(
 					"PRM_NAK_MULTICAST");
 			prmMsg->setCommand(PRM_NAK_MULTICAST);
@@ -262,10 +259,6 @@ void Prm::handleUDPMessage(BaseOverlayMessage* msg) {
             it->second->touch();
         }
 
-//        if (thisNode.getIp().str().compare("1.0.0.78") == 0) {
-//    		std::cout << thisNode.getIp().str() << " recebe de " << niceMsg->getSrcNode() << " ("<<  niceMsg->getCommand() << ")" << endl;
-//    	}
-
         /* Dispatch message, possibly downcasting to a more concrete type */
         switch (niceMsg->getCommand()) {
 
@@ -301,26 +294,19 @@ void Prm::handleUDPMessage(BaseOverlayMessage* msg) {
 
 void Prm::changeState(int toState) {
 	Nice::changeState(toState);
-//	if (toState == READY) {
-//		startPrmRandomWalkDiscover();
-//	}
+
+	//Start populating CHILD_LIST with 0.2 probability
 	if ((rand() % (int)(1/0.2)) == 1){
 			startPrmRandomWalkDiscover();
 		}
 }
 
 void Prm::startPrmRandomWalkDiscover() {
+
 	int layer = getHighestLayer();
-
-	// Only populate r list in layers with getHighestLayer>0
-//	if(layer <= 0){
-//		return;
-//	}
-
 	if (getCluster(layer).getSize() == 1 /*&& layer != 0*/) {
 		layer--;
 	}
-
 	if (layer >= 0) {
 		PrmRandomWalkMessage *prmMsg = new PrmRandomWalkMessage("PRM_RANDOM_WALK");
 		prmMsg->setCommand(PRM_RANDOM_WALK);
@@ -328,13 +314,11 @@ void Prm::startPrmRandomWalkDiscover() {
 		prmMsg->setSrcNode(thisNode);
 		prmMsg->setBitLength(PRMRANDOMWALK_L(prmMsg));
 		prmMsg->setTtl(TTL);
-//		prmMsg->setTtl(1);
 
 		for (int i=0; i < NUM_CHILDS; i++) {
 			int index = rand() % getCluster(layer).getSize();
 			const TransportAddress& random_member = getCluster(layer).get(index);
 			if (random_member != thisNode) {
-				//std::cout << thisNode.getIp().str() << " envia para " << random_member << endl;
 				sendMessageToUDP(random_member, prmMsg->dup());
 				randomWalk_initiated_++;
 			}
@@ -346,11 +330,7 @@ void Prm::startPrmRandomWalkDiscover() {
 
 void Prm::sendPrmRandomWalk(PrmRandomWalkMessage* msg) {
 	int layer = msg->getLayer();
-//	int layer = getHighestLayer();
 
-//	if (getCluster(layer).getSize() == 1 /*&& layer >= 0*/) {
-//		layer--;
-//	}
 
 	if (layer >= 1) {
 		// Stay in the same layer or go down 1 layer with 0.2 probability.
@@ -366,22 +346,10 @@ void Prm::sendPrmRandomWalk(PrmRandomWalkMessage* msg) {
 	}
 
 	if (layer >= 0) {
-//		if (thisNode.getIp().str().compare("1.0.0.10") == 0 && msg->getSrcNode().getIp().str().compare("1.0.0.51") == 0) {
-//			std::cout << "SIM TTL:"<< msg->getTtl() << " layer:" << layer<< endl;
-//		}
 		for (int i=0; i < NUM_CHILDS; i++) {
 			int index = rand() % getCluster(layer).getSize();
-//			if (thisNode.getIp().str().compare("1.0.0.10") == 0 && msg->getSrcNode().getIp().str().compare("1.0.0.51") == 0) {
-//				std::cout << "index:"<< index << endl;
-//			}
 			const TransportAddress& random_member = getCluster(layer).get(index);
-//			if (thisNode.getIp().str().compare("1.0.0.10") == 0 && msg->getSrcNode().getIp().str().compare("1.0.0.51") == 0) {
-//				std::cout << "random_member:"<< random_member << endl;
-//			}
 			if (random_member != thisNode && random_member != msg->getSrcNode()) {
-//				if (thisNode.getIp().str().compare("1.0.0.51") == 0) {
-//				std::cout << thisNode.getIp().str() << " RENCAMINHA para " << random_member << endl;
-//				}
 				PrmRandomWalkMessage *prmMsg = msg->dup();
 				prmMsg->setLayer(layer);
 				sendMessageToUDP(random_member, prmMsg);
@@ -397,10 +365,6 @@ void Prm::sendPrmRandomWalk(PrmRandomWalkMessage* msg) {
 void Prm::handlePrmRandomWalk(PrmRandomWalkMessage* msg) {
 	if (msg->getSrcNode() != thisNode) {
 		int ttl = msg->getTtl();
-
-//		if (thisNode.getIp().str().compare("1.0.0.10") == 0 ) {
-//			std::cout << thisNode.getIp().str() << " recebe de " << msg->getSrcNode() << " TTL:" << ttl << endl;
-//		}
 
 		if (ttl == 0) {
 			PrmRandomWalkMessage *prmMsg = new PrmRandomWalkMessage("PRM_RANDOM_WALK_RESPONSE");
@@ -428,7 +392,6 @@ void Prm::handlePrmRandomWalkResponse(PrmRandomWalkMessage* msg){
 				childs_.remove(childs_.front());
 			}
 			childs_.push_back(srcNode);
-//			std::cout << "recebe filho " << childs_.size() <<  endl;
 		}
 	}
 	delete msg;

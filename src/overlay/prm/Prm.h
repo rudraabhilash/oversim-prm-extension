@@ -16,7 +16,7 @@ namespace oversim {
 
 class MulticastMessageQueue : public std::list<PrmMulticastMessage*> {
 	/* Size of the packet buffer.*/
-	const static int BUFFER_SIZE = 10;
+	const static int BUFFER_SIZE = 20;
 public:
 	MulticastMessageQueue();
 	void push(PrmMulticastMessage* x);
@@ -25,8 +25,8 @@ public:
 
 class Prm: public Nice {
 //	const static string SIM_RESULTS_FILENAME = "prm-results";
-	const static int NUM_CHILDS = 3;
-	const static int TTL = 3;
+	const static int NUM_CHILDS = 3; // Size of the list of Mesh links (a.k.a  "r")
+	const static int TTL = 2; // e.g. TTL =3, RANDOMWALK message will we forwarded 3 times before a node replies
 	const static int DISCOVERY_INTERVAL = 80;
 	const static double BETA = 0.01;
 private:
@@ -48,8 +48,16 @@ private:
 	long naks_received_;
 	/* Number of naks sent. */
 	long naks_sent_;
+	/* Number of random walks forwarded sent. */
+	long randomWalk_forwards_;
+	/* Number of random walks initiated. */
+	long randomWalk_initiated_;
+	/* Number of Multicast packets sent over mesh links. */
+	long mesh_sent_pkts_;
+
 	/* List of childs. Used for in the PRM random walk scheme. */
 	std::list<TransportAddress> childs_;
+
 protected:
 	void printNodeStatus(PrmMulticastMessage* msg);
 	void updatePrmMulticast(PrmMulticastMessage* msg);

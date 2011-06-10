@@ -28,10 +28,11 @@ void MulticastMessageQueue::push(PrmMulticastMessage* x) {
 
 
 Prm::Prm() :
-	Nice(),last_pkt_id_(-1), duplicated_pkts_(0), received_pkts_(0), seqNo_(-1), naks_received_(0), naks_sent_(0) {
+	Nice(),last_pkt_id_(-1), duplicated_pkts_(0), received_pkts_(0), seqNo_(-1), naks_received_(0), naks_sent_(0),
+	randomWalk_forwards_(0),randomWalk_initiated_(0), mesh_sent_pkts_(0) {
 	// Initializing seed of the random number generator.
-	//srand(time(0));
-	srand(1000);
+	srand(time(0));
+//	srand(1000);
 }
 
 Prm::~Prm() {
@@ -101,9 +102,14 @@ void Prm::handlePrmMulticast(PrmMulticastMessage* multicastMsg) {
 	handleNiceMulticast(multicastMsg);
 
 	// Start random walk discovery for each DISCOVERY_INTERVAL packets.
-	if ((received_pkts_ % DISCOVERY_INTERVAL) == 0) {
+//	if ((received_pkts_ % DISCOVERY_INTERVAL) == DISCOVERY_INTERVAL-1) {
+//		startPrmRandomWalkDiscover();
+//	}
+
+	if ((rand() % (int)(1/0.001)) == 1){
 		startPrmRandomWalkDiscover();
 	}
+
 }
 
 void Prm::sendDataToChilds(PrmMulticastMessage* msg){
@@ -116,6 +122,7 @@ void Prm::sendDataToChilds(PrmMulticastMessage* msg){
 				dup->setLayer(-1);
 				dup->setLastHop(thisNode);
 				sendMessageToUDP(*it, dup);
+				mesh_sent_pkts_++;
 			}
 		}
 	}
@@ -294,13 +301,21 @@ void Prm::handleUDPMessage(BaseOverlayMessage* msg) {
 
 void Prm::changeState(int toState) {
 	Nice::changeState(toState);
-	if (toState == READY) {
-		startPrmRandomWalkDiscover();
-	}
+//	if (toState == READY) {
+//		startPrmRandomWalkDiscover();
+//	}
+	if ((rand() % (int)(1/0.2)) == 1){
+			startPrmRandomWalkDiscover();
+		}
 }
 
 void Prm::startPrmRandomWalkDiscover() {
 	int layer = getHighestLayer();
+
+	// Only populate r list in layers with getHighestLayer>0
+//	if(layer <= 0){
+//		return;
+//	}
 
 	if (getCluster(layer).getSize() == 1 /*&& layer != 0*/) {
 		layer--;
@@ -321,6 +336,7 @@ void Prm::startPrmRandomWalkDiscover() {
 			if (random_member != thisNode) {
 				//std::cout << thisNode.getIp().str() << " envia para " << random_member << endl;
 				sendMessageToUDP(random_member, prmMsg->dup());
+				randomWalk_initiated_++;
 			}
 		}
 
@@ -337,8 +353,8 @@ void Prm::sendPrmRandomWalk(PrmRandomWalkMessage* msg) {
 //	}
 
 	if (layer >= 1) {
-		// Stay in the same layer or go down 1 layer with 0.5 probability.
-		if ((rand() % 2) == 1) {
+		// Stay in the same layer or go down 1 layer with 0.2 probability.
+		if ((rand() % 5) == 1) {
 			layer--;
 		}
 	}
@@ -369,6 +385,8 @@ void Prm::sendPrmRandomWalk(PrmRandomWalkMessage* msg) {
 				PrmRandomWalkMessage *prmMsg = msg->dup();
 				prmMsg->setLayer(layer);
 				sendMessageToUDP(random_member, prmMsg);
+				randomWalk_forwards_++;
+				break;
 			}
 		}
 	}
@@ -430,6 +448,9 @@ void Prm::finishOverlay(){
 	recordScalar("Loss Percentage",loss_percentage,NULL);
 	recordScalar("Naks Received",naks_received_,NULL);
 	recordScalar("Naks Sent",naks_sent_,NULL);
+	recordScalar("randomWalk forward number",randomWalk_forwards_,NULL);
+	recordScalar("randomWalk initiated Sent",randomWalk_initiated_,NULL);
+	recordScalar("Packets Mesh Link Sent",mesh_sent_pkts_,NULL);
 
 	Nice::finishOverlay();
 }
